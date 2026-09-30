@@ -1,0 +1,76 @@
+<div class="stats">
+  <div class="kpis">
+    @for (kpi of kpis(); track kpi.label) {
+      <div class="card kpi">
+        <span class="muted">{{ kpi.label }}</span>
+        <strong>{{ kpi.value }}</strong>
+        <span class="delta" [class.positive]="kpi.positive">{{ kpi.delta }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="card chart-card">
+    <div class="head"><span>{{ 'stats.accTitle' | translate }}</span><span class="muted">{{ 'stats.last30' | translate }}</span></div>
+    <div class="chart">
+      @if (chart(); as c) {
+        <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+          <line x1="0" y1="25" x2="300" y2="25" stroke="rgba(0,0,0,0.08)" stroke-width="0.5" />
+          <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(0,0,0,0.08)" stroke-width="0.5" />
+          <line x1="0" y1="75" x2="300" y2="75" stroke="rgba(0,0,0,0.08)" stroke-width="0.5" />
+          @if (c.single) {
+            <line [attr.x1]="c.single.x" [attr.y1]="c.single.y" [attr.x2]="c.single.x" y2="100" stroke="#2f7d4e" stroke-width="2" vector-effect="non-scaling-stroke" />
+          } @else {
+            <polygon [attr.points]="c.area" fill="#dff0e4" />
+            <polyline [attr.points]="c.line" fill="none" stroke="#2f7d4e" stroke-width="1.6" vector-effect="non-scaling-stroke" />
+          }
+        </svg>
+        <span class="axis top">{{ c.upper }}%</span>
+        <span class="axis bottom">{{ c.lower }}%</span>
+      } @else {
+        <span class="muted empty">{{ 'stats.noData' | translate }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="card weak-card">
+    <div class="head column"><span>{{ 'stats.weakTitle' | translate }}</span></div>
+    @for (weak of weak(); track weak.node.key) {
+      <div class="weak-row">
+        <span class="pct" [class.bad]="weak.rate > 0.3">{{ weak.pct }}%</span>
+        <div class="weak-text">
+          <span class="mono"><span class="muted">{{ weak.context }}&nbsp;</span><b>{{ weak.san }}</b></span>
+          <span class="muted name">{{ weak.name }}</span>
+        </div>
+        <button class="btn small" (click)="drill(weak)">{{ 'stats.drill' | translate }}</button>
+      </div>
+    } @empty {
+      <span class="muted">{{ 'train.emptyWeakText' | translate }}</span>
+    }
+  </div>
+
+  <div class="card groups-card">
+    <span class="head">{{ 'stats.byRepertoire' | translate }}</span>
+    @for (group of repertoires(); track group.id) {
+      <div class="group">
+        <div class="group-head"><span class="rep-name"><app-side-swatch [side]="group.side" [size]="12" />{{ group.name }} <span class="muted">({{ group.count }})</span></span><b [style.color]="masteryColor(group.mastery)">{{ group.mastery === null ? ('map.new' | translate) : group.mastery + '%' }}</b></div>
+        <div class="bar"><div [style.width.%]="group.pct" [style.background]="masteryColor(group.mastery)"></div></div>
+      </div>
+    }
+  </div>
+
+  <div class="card activity-card">
+    <div class="head"><span>{{ 'stats.activity' | translate }}</span><span class="muted">{{ 'stats.last20w' | translate }}</span></div>
+    <div class="activity">
+      @for (day of activity(); track day.day) {
+        <div [style.background]="day.future ? 'transparent' : day.color" [title]="day.day + ': ' + day.count"></div>
+      }
+    </div>
+    <div class="scale">
+      {{ 'stats.less' | translate }}
+      @for (color of activityColors; track color) {
+        <i [style.background]="color"></i>
+      }
+      {{ 'stats.more' | translate }}
+    </div>
+  </div>
+</div>

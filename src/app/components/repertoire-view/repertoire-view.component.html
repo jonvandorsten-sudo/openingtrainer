@@ -1,0 +1,125 @@
+<div class="rep">
+  <section class="left">
+    <div class="card folders">
+      @for (group of groups(); track group.side) {
+        <div class="side-head"><app-side-swatch [side]="group.side" [size]="12" />{{ 'side.' + group.side | translate }}<span class="muted">{{ group.records.length }}</span></div>
+      @for (record of group.records; track record.id) {
+        <div class="folder" [class.on]="record.id === active()?.record?.id" (click)="select(record)">
+          <app-side-swatch [side]="record.side" [size]="26" icon="folder" />
+          <div class="folder-text"><strong>{{ record.name }}</strong><span>{{ linesLabel(record) }}</span></div>
+          <span class="pct" [style.color]="masteryColor(store.masteryOf(record))">{{ store.masteryOf(record) === null ? ('picker.new' | translate) : store.masteryOf(record) + '%' }}</span>
+          <button class="icon-btn small" (click)="toggleMenu(record, $event)"><span class="icon">more_vert</span></button>
+        </div>
+        @if (menuFor() === record.id) {
+          <div class="folder-menu">
+            <button class="btn" (click)="rename(record)">{{ 'rep.rename' | translate }}</button>
+            <button class="btn" (click)="resetProgress(record)">{{ 'rep.resetProgress' | translate }}</button>
+            <button class="btn danger" (click)="remove(record)">{{ 'rep.delete' | translate }}</button>
+          </div>
+        }
+      }
+      }
+      <button class="folder add" (click)="newRepertoire()">{{ 'rep.newFolder' | translate }}</button>
+    </div>
+
+    <div class="card tree-card">
+      <label class="search">
+        <span class="icon">search</span>
+        <input [placeholder]="'rep.search' | translate" [ngModel]="query()" (ngModelChange)="query.set($event)" />
+      </label>
+      <div class="tree-tools">
+        <button class="link-btn" (click)="collapseAll()">{{ 'rep.collapseAll' | translate }}</button>
+        <button class="link-btn" (click)="expandAll()">{{ 'rep.expandAll' | translate }}</button>
+      </div>
+      <div class="tree">
+        @for (row of visibleRows(); track row.end.key) {
+          <div class="tree-row" [class.on]="row.end === selectedEnd()" (click)="selectRow(row)">
+            <span class="tree-text" [style.padding-left.px]="query() ? 0 : row.depth * 12">
+              @if (row.leaf) {
+                <span class="icon leaf">radio_button_unchecked</span>
+              } @else {
+                <button class="fold" [title]="(isCollapsed(row) ? 'rep.expand' : 'rep.collapse') | translate" (click)="toggleRow(row, $event)"><span class="icon">{{ isCollapsed(row) ? 'chevron_right' : 'expand_more' }}</span></button>
+              }
+              <span class="mono row-moves">
+                @for (m of rowMoves(row); track m.node.key) {
+                  <span class="tm" [class.at]="m.node === current()" (click)="selectNode(m.node); $event.stopPropagation()">{{ m.number }}{{ m.san }}</span>
+                }
+              </span>
+            </span>
+            <span class="pct" [style.color]="masteryInk(row.mastery)">{{ row.mastery === null ? ('map.new' | translate) : row.mastery + '%' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="middle">
+    <div class="board-wrap">
+      <app-chess-board [position]="board()" [orientation]="orientation()" />
+      @if (choice(); as c) {
+        <div class="choice">
+          <span class="choice-title">{{ 'rep.chooseMove' | translate }}</span>
+          @for (option of c.options; track option.node.key; let i = $index) {
+            <button class="choice-option" [class.on]="i === c.selected" (click)="choose(option.node)" (mouseenter)="choice.set({ options: c.options, selected: i })">
+              <span class="mono">{{ currentMoveLabel(option.node) }}</span>
+              @if (i === 0) {
+                <span class="muted">{{ 'edit.main' | translate }}</span>
+              }
+              <span class="muted count">{{ 'free.linesCount' | translate: { n: option.lines, count: option.lines } }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+    <div class="nav-buttons">
+      <button class="btn" (click)="step(-99)"><span class="icon">first_page</span></button>
+      <button class="btn" (click)="step(-1)"><span class="icon">chevron_left</span></button>
+      <button class="btn" (click)="forward()"><span class="icon">chevron_right</span></button>
+      <button class="btn" (click)="step(99)"><span class="icon">last_page</span></button>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="card line-info">
+      <div class="title">
+        @if (line(); as l) {
+          <span class="muted">{{ l.eco || l.group }} · {{ 'train.line' | translate: { n: l.index + 1, total: active()!.lines.length } }}</span>
+          <span class="name">{{ l.name }}</span>
+        }
+      </div>
+      <div class="moves-flow small">
+        @for (move of path(); track move.key; let i = $index) {
+          <button class="mv" (click)="goTo(i)">
+            <span class="num">{{ moveNumberLabel(move, i) }}</span>
+            <span class="san" [class.mine]="move.color === active()?.color" [class.at]="i === index() - 1" [class.future]="i >= index()">{{ move.san }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="card comment">
+      <div class="comment-head">
+        <span class="label">{{ 'train.comment' | translate }}</span>
+        @if (current() && !editing()) {
+          <button class="icon-btn small" [title]="'rep.editComment' | translate" (click)="startEdit()"><span class="icon">edit</span></button>
+        }
+      </div>
+      @if (editing()) {
+        <div class="field"><textarea rows="6" [ngModel]="draft()" (ngModelChange)="draft.set($event)"></textarea></div>
+        <div class="edit-actions">
+          <button class="btn" (click)="editing.set(false)">{{ 'rep.cancel' | translate }}</button>
+          <button class="btn primary" (click)="saveComment()">{{ 'rep.save' | translate }}</button>
+        </div>
+      } @else {
+        <p [class.muted]="!comment()">{{ comment() || ('rep.noComment' | translate) }}</p>
+      }
+    </div>
+
+    <div class="buttons">
+      <button class="btn primary grow" (click)="trainLine()" [disabled]="!line()">{{ 'rep.trainLine' | translate }}</button>
+      <button class="btn" (click)="edit()">{{ 'explore.edit' | translate }}</button>
+      <button class="btn" (click)="showOnMap()" [disabled]="!line()">{{ 'rep.onMap' | translate }}</button>
+      <button class="btn danger icon-only" [title]="current() ? ('edit.deleteFrom' | translate: { move: currentLabel() }) : ''" [disabled]="!current()" (click)="removeCurrent()"><span class="icon">delete</span></button>
+    </div>
+  </section>
+</div>

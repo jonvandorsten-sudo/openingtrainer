@@ -1,0 +1,55 @@
+{
+  "name": "chess-opening-trainer",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "build:enpassant": "ng build --configuration production --base-href /openingtrainer/",
+    "build:pages": "ng build --configuration production --base-href /openingtrainer/",
+    "deploy:pages": "node scripts/deploy-pages.mjs"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "dependencies": {
+    "@angular/common": "^21.0.0",
+    "@angular/compiler": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/platform-browser": "^21.0.0",
+    "@angular/router": "^21.0.0",
+    "@angular/service-worker": "^21.0.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@mliebelt/pgn-parser": "^1.4.19",
+    "chess.js": "^1.4.0",
+    "chessground": "^9.2.1",
+    "material-icons": "^1.13.14",
+    "rxjs": "~7.8.0",
+    "stockfish": "^19.0.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.0.4",
+    "@angular/cli": "^21.0.4",
+    "@angular/compiler-cli": "^21.0.0",
+    "jsdom": "^27.1.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  },
+  "license": "GPL-3.0-or-later"
+}

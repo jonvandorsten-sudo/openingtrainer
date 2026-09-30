@@ -1,0 +1,117 @@
+<div class="mobile-modes"><app-mode-tabs /></div>
+
+@if (freeStart()) {
+  <app-free-start />
+} @else if (queueEmpty()) {
+  <div class="empty card">
+    @if (nav.freeSession()) {
+      <span class="icon big">task_alt</span>
+      <h2>{{ 'train.emptyTitle' | translate }}</h2>
+      <p class="muted">{{ 'free.sessionDone' | translate }}</p>
+      <div class="row">
+        <button class="btn primary" (click)="backToFreeStart()">{{ 'free.back' | translate }}</button>
+      </div>
+    } @else {
+      <span class="icon big">{{ nav.mode() === 'weak' ? 'verified' : 'task_alt' }}</span>
+      <h2>{{ (nav.mode() === 'weak' ? 'train.emptyWeakTitle' : 'train.emptyTitle') | translate }}</h2>
+      <div class="row">
+        <button class="btn primary" (click)="trainEverything()">{{ 'train.trainAll' | translate }}</button>
+        @if (nav.mode() !== 'weak' && store.weakCount() > 0) {
+          <button class="btn" (click)="nav.startSession('weak')">{{ 'mode.weak' | translate }}</button>
+        }
+      </div>
+    }
+  </div>
+} @else {
+  <div class="train">
+    <section class="play">
+      <div class="board-row">
+        @if (showEval()) {
+          <app-eval-bar class="eval-vertical" [evaluation]="evaluation()" [orientation]="orientation()" />
+        }
+        <div class="board">
+          <app-chess-board [position]="trainer.board()" [orientation]="orientation()" (moved)="trainer.move($event)" />
+        </div>
+      </div>
+      @if (showEval()) {
+        <app-eval-bar class="eval-horizontal" [evaluation]="evaluation()" [orientation]="orientation()" [horizontal]="true" />
+      }
+      <app-feedback-bar [feedback]="trainer.feedback()" />
+      <div class="actions">
+        @if (trainer.done()) {
+          <button class="btn primary" (click)="next()">{{ 'train.next' | translate }}</button>
+        } @else {
+          <button class="btn" title="H" (click)="trainer.hint()">{{ 'train.hint' | translate }}</button>
+        }
+        <button class="btn" title="R" (click)="trainer.restart()">{{ 'train.restart' | translate }}</button>
+        @if (!trainer.done()) {
+          <button class="btn" (click)="skip()">{{ 'train.skip' | translate }}</button>
+        }
+        <button class="btn icon-only" [title]="'train.openExplore' | translate" (click)="openInExplore()"><span class="icon">travel_explore</span></button>
+      </div>
+    </section>
+
+    <section class="info">
+      @if (freeInfo(); as free) {
+        <div class="free-pill">
+          <span class="icon">route</span>
+          <span class="free-text">{{ 'free.from' | translate }} <b class="mono">{{ free.moves || ('map.startPos' | translate) }}</b> · {{ 'free.linesCount' | translate: { n: free.lines, count: free.lines } }} · {{ free.name }}</span>
+          <button class="btn compact" (click)="backToFreeStart()">{{ 'free.back' | translate }}</button>
+        </div>
+      }
+
+      @if (line(); as l) {
+        <div class="card line-card">
+          <div class="meta">
+            <span class="chip">{{ lineEco() }}</span>
+            <span class="muted">{{ 'train.line' | translate: lineNumber() }}@if (showRepertoireName() && repertoire(); as r) { · {{ r.record.name }}}</span>
+            @if (likelihood(l); as chance) {
+              <span class="chance">{{ 'prep.chance' | translate: { name: repertoire()!.record.prep!.playerName, chance } }}</span>
+            }
+          </div>
+          <div class="name">{{ lineTitle() }}</div>
+          <div class="tiles">
+            <div class="tile"><strong class="good">{{ trainer.counters().correct }}</strong><span>{{ 'train.correct' | translate }}</span></div>
+            <div class="tile"><strong [class.bad]="trainer.counters().mistakes > 0">{{ trainer.counters().mistakes }}</strong><span>{{ 'train.mistakes' | translate }}</span></div>
+            <div class="tile"><strong>{{ trainer.counters().hints }}</strong><span>{{ 'train.hints' | translate }}</span></div>
+          </div>
+        </div>
+      }
+
+      <div class="card">
+        <span class="label">{{ 'train.played' | translate }}</span>
+        <div class="moves-flow">
+          @for (move of trainer.played(); track move.key; let i = $index; let last = $last) {
+            <span class="mv"><span class="num">{{ moveLabel(move, i) }}</span><span class="san" [class.mine]="isMine(move)" [class.current]="last">{{ move.san }}</span></span>
+          }
+          @if (trainer.playing()) {
+            <span class="unknown">?</span>
+          }
+        </div>
+      </div>
+
+      @if (comment()) {
+        <div class="card comment">
+          <span class="label">{{ 'train.comment' | translate }}</span>
+          <p>{{ comment() }}</p>
+        </div>
+      }
+
+      <div class="spacer"></div>
+
+      @if (trainer.playing()) {
+        @if (trainer.peekOpen()) {
+          <div class="peek-open">
+            <div class="peek-head"><span>{{ 'train.peekTitle' | translate }}</span><button (click)="trainer.togglePeek()">{{ 'train.hide' | translate }}</button></div>
+            <span class="mono">{{ restOfLine() }}</span>
+          </div>
+        } @else {
+          <button class="peek" (click)="trainer.togglePeek()">
+            
+            <span class="peek-text"><strong>{{ 'train.peek' | translate }}</strong></span>
+          </button>
+        }
+      }
+    </section>
+  </div>
+}

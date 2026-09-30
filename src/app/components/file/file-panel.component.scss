@@ -1,0 +1,289 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.panel {
+  position: fixed;
+  top: 62px;
+  right: 20px;
+  z-index: 81;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.grab {
+  display: none;
+}
+
+.head {
+  display: flex;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--rail-deep);
+  color: #fff;
+
+  > .icon {
+    font-size: 24px;
+    margin-top: 2px;
+  }
+
+  strong {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    opacity: 0.9;
+  }
+}
+
+.head-text {
+  flex: 1;
+}
+
+.close {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 18px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--tile);
+
+  &.dirty {
+    background: #fff8e1;
+  }
+
+  > .icon {
+    color: var(--ink-3);
+  }
+}
+
+.status-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+}
+
+.badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.warn {
+    color: #a86a00;
+  }
+
+  &.ok {
+    color: var(--ink-3);
+  }
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+
+  .btn {
+    height: 42px;
+    justify-content: center;
+  }
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--warn-soft);
+  color: var(--warn-ink);
+  font-size: 13px;
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.error {
+  margin: 0;
+  color: var(--error);
+  font-size: 13px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  > .icon {
+    color: var(--accent);
+    font-size: 20px;
+    margin-top: 1px;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
+}
+
+.row-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+
+  strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+}
+
+.toggle {
+  align-items: center;
+  cursor: pointer;
+
+  > .icon {
+    color: var(--ink-3);
+  }
+
+  input {
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 38px;
+    height: 22px;
+    margin: 0;
+    border-radius: 11px;
+    background: #cfd5cf;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.2s ease;
+    }
+
+    &:checked {
+      background: var(--accent);
+    }
+
+    &:checked::after {
+      transform: translateX(16px);
+    }
+  }
+}
+
+.permission {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: auto;
+    max-width: none;
+    max-height: 88vh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .grab {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .head {
+    padding-top: 24px;
+  }
+
+  .actions .btn,
+  .row .btn {
+    height: 44px;
+  }
+}

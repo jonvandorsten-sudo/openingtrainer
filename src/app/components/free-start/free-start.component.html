@@ -1,0 +1,80 @@
+<div class="free">
+  <section class="play">
+    <div class="board-row">
+      @if (showEval()) {
+        <app-eval-bar class="eval-vertical" [evaluation]="evaluation()" [orientation]="orientation()" />
+      }
+      <div class="board">
+        <app-chess-board [position]="board()" [orientation]="orientation()" (moved)="onBoardMove($event)" />
+      </div>
+    </div>
+    @if (showEval()) {
+      <app-eval-bar class="eval-horizontal" [evaluation]="evaluation()" [orientation]="orientation()" [horizontal]="true" />
+    }
+    <app-feedback-bar [feedback]="feedback()" />
+    <div class="actions">
+      <button class="btn" (click)="undo()" [disabled]="sans().length === 0">{{ 'free.undo' | translate }}</button>
+      <button class="btn" (click)="reset()" [disabled]="sans().length === 0">{{ 'free.reset' | translate }}</button>
+      <button class="btn" (click)="flip()">{{ 'free.flip' | translate }}</button>
+      <button class="btn explore" (click)="explore()">{{ 'free.explore' | translate }}</button>
+    </div>
+  </section>
+
+  <section class="info">
+    <div class="card intro">
+      <div class="intro-head">
+        <h2>{{ 'free.title' | translate }}</h2>
+        <div class="segmented small">
+          <button [class.on]="filter() === 'all'" (click)="filter.set('all')">{{ 'free.all' | translate }}</button>
+          <button [class.on]="filter() === 'white'" (click)="filter.set('white')"><app-side-swatch side="white" [size]="10" />{{ 'side.white' | translate }}</button>
+          <button [class.on]="filter() === 'black'" (click)="filter.set('black')"><app-side-swatch side="black" [size]="10" />{{ 'side.black' | translate }}</button>
+        </div>
+      </div>
+      <div class="moves-flow small">
+        @for (move of played(); track $index; let i = $index; let last = $last) {
+          <span class="mv"><span class="num">{{ moveNumber(i) }}</span><span class="san" [class.current]="last">{{ move.san }}</span></span>
+        } @empty {
+          <span class="muted">{{ 'map.startPos' | translate }}</span>
+        }
+      </div>
+    </div>
+
+    @if (matches().length > 0) {
+      <div class="card fits">
+        <div class="fits-head">
+          <span>{{ 'free.fits' | translate }}</span>
+          <span class="muted">{{ 'free.fitsCount' | translate: { lines: lineTotal(), reps: matches().length } }}</span>
+        </div>
+        @for (match of matches(); track match.active.record.id) {
+          <div class="match">
+            <app-side-swatch class="swatch" [side]="match.active.record.side" [size]="10" />
+            <div class="match-text">
+              <strong>{{ match.active.record.name }}</strong>
+              <span class="muted">{{ subtitle(match) }}</span>
+            </div>
+            <div class="next">
+              <span class="muted">{{ (match.yourMove ? 'free.yourMove' : 'free.opponent') | translate }}</span>
+              @for (move of match.next.slice(0, MAX_NEXT); track move.san) {
+                <button class="move-link" (click)="play(move.san)">{{ move.san }}<span>{{ move.lines }}</span></button>
+              }
+              @if (match.next.length > MAX_NEXT) {
+                <span class="muted more">+{{ match.next.length - MAX_NEXT }}</span>
+              }
+            </div>
+            <span class="pct" [style.color]="masteryColor(match.mastery)">{{ match.mastery === null ? ('picker.new' | translate) : match.mastery + '%' }}</span>
+            <button class="btn outline" (click)="train(match)">{{ 'free.train' | translate }}</button>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="card none">
+        <span class="icon big">search_off</span>
+        <strong>{{ 'free.none' | translate }}</strong>
+        <div class="row">
+          <button class="btn" (click)="undo()" [disabled]="sans().length === 0">{{ 'free.undo' | translate }}</button>
+          <button class="btn primary" (click)="explore()">{{ 'free.explore' | translate }}</button>
+        </div>
+      </div>
+    }
+  </section>
+</div>

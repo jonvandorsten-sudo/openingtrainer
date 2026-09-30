@@ -1,0 +1,251 @@
+<div class="explorer" [class.editing]="!!editTarget()">
+  <section class="left">
+    <div class="board-row">
+      @if (store.settings().showEval) {
+        <app-eval-bar class="eval" [evaluation]="evaluation()" [orientation]="orientation()" />
+      }
+      <div class="board">
+        <app-chess-board [position]="board()" [orientation]="orientation()" (moved)="onBoardMove($event)" />
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" (click)="reset()" [title]="'ex.start' | translate"><span class="icon">first_page</span></button>
+      <button class="btn" (click)="back()"><span class="icon">chevron_left</span></button>
+      <button class="btn" (click)="forward()"><span class="icon">chevron_right</span></button>
+      <button class="btn" (click)="flip()" [title]="'ex.flip' | translate"><span class="icon">swap_vert</span></button>
+    </div>
+    <div class="card path">
+      @if (opening(); as o) {
+        <div class="opening"><span class="chip">{{ o.eco }}</span><span>{{ o.name }}</span></div>
+      }
+      <div class="moves-flow small">
+        @for (move of path(); track $index; let i = $index; let last = $last) {
+          <button class="mv" (click)="goTo(i)"><span class="num">{{ moveNumber(i) }}</span><span class="san" [class.current]="last">{{ move.san }}</span></button>
+        } @empty {
+          <span class="muted">{{ 'map.startPos' | translate }}</span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="middle">
+    <div class="card engine">
+      <div class="head">
+        <span class="label">Stockfish 19</span>
+        @if (evaluation(); as e) {
+          <span class="muted">{{ 'ex.depth' | translate: { depth: e.depth } }}</span>
+        }
+      </div>
+      @for (line of engineLines(); track line.multipv) {
+        <button class="engine-line" (click)="play(line.sans[0])">
+          <span class="score" [class.neg]="line.value < 0">{{ formatEval(line) }}</span>
+          <span class="mono"><b>{{ line.sans[0] }}</b> {{ line.sans.slice(1).join(' ') }}</span>
+        </button>
+      } @empty {
+        <span class="muted">{{ store.settings().showEval ? ('ex.thinking' | translate) : ('ex.engineOff' | translate) }}</span>
+      }
+    </div>
+
+    <div class="card source-card">
+      <div class="sources">
+        <div class="segmented">
+          <button [class.on]="source() === 'book'" (click)="selectSource('book')">{{ 'ex.book' | translate }}</button>
+          <button [class.on]="source() === 'lichess'" (click)="selectSource('lichess')">Lichess</button>
+          <button [class.on]="source() === 'masters'" (click)="selectSource('masters')">Masters</button>
+        </div>
+        <div class="players">
+          @for (p of store.players(); track p.id) {
+            <button class="player-chip" [class.on]="source() === 'player:' + p.id" (click)="selectPlayer(p.id)">
+              {{ p.username }}<span class="muted">· {{ p.platform === 'lichess' ? 'Lichess' : 'Chess.com' }}</span>
+            </button>
+          }
+          <button class="player-chip add" (click)="playerDialog.set(true)">{{ 'ex.addPlayer' | translate }}</button>
+        </div>
+      </div>
+
+      @if (player(); as p) {
+        <div class="filters">
+          <div class="segmented small">
+            <button [class.on]="filter().color === 'white'" (click)="setFilter({ color: 'white' })">{{ 'ex.playsWhite' | translate: { name: p.username } }}</button>
+            <button [class.on]="filter().color === 'black'" (click)="setFilter({ color: 'black' })">{{ 'ex.playsBlack' | translate: { name: p.username } }}</button>
+          </div>
+          <div class="time-classes">
+            @for (tc of timeClasses; track tc) {
+              <button class="tc" [class.on]="filter().timeClasses.includes(tc)" (click)="toggleTimeClass(tc)">{{ 'tc.' + tc | translate }}</button>
+            }
+          </div>
+          <span class="muted count">{{ 'ex.gamesCount' | translate: { n: playerGames().length, total: p.games.length } }}</span>
+          <button class="btn small-btn prep-btn" (click)="prepDialog.set(true)">{{ 'prep.open' | translate }}</button>
+          <button class="icon-btn small" [title]="'ex.updatePlayer' | translate" [disabled]="!!importer.job()" (click)="updatePlayer()"><span class="icon">sync</span></button>
+          <button class="icon-btn small" [title]="'ex.removePlayer' | translate" (click)="store.deletePlayer(p.id); selectSource('book')"><span class="icon">delete</span></button>
+        </div>
+        @if (updateMessage(); as m) {
+          <p class="muted update-message">{{ m.key | translate: { n: m.n ?? 0 } }}</p>
+        }
+      }
+
+      @if (importer.job(); as job) {
+        <div class="job">
+          <span class="icon spin">sync</span>
+          <span>
+            {{ job.username }}:
+            @if (job.phase === 'download') {
+              {{ 'pl.progress' | translate: { n: job.done } }}
+            } @else {
+              {{ 'pl.indexing' | translate: { n: job.done, total: job.total ?? 0 } }}
+            }
+          </span>
+          <button class="btn small-btn" (click)="importer.stop()">{{ 'pl.stop' | translate }}</button>
+        </div>
+      }
+
+      @if ((source() === 'lichess' || source() === 'masters') && explorerError() === 'auth') {
+        <div class="login">
+          <p>{{ 'ex.loginText' | translate }}</p>
+          <button class="btn primary" (click)="lichess.login()">{{ 'ex.login' | translate }}</button>
+        </div>
+      } @else if (explorerError(); as error) {
+        <p class="error">{{ 'ex.error.' + error | translate: { s: lichess.pauseSeconds() } }}@if (explorerStatus() && error === 'network') { (HTTP {{ explorerStatus() }})}</p>
+      }
+
+      <div class="table">
+        @if (moves().length > 0) {
+          <div class="row header">
+            <span class="san-col">{{ 'ex.move' | translate }}</span>
+            @if (source() === 'book') {
+              <span class="share-col" [title]="'ex.bookShareHint' | translate">{{ 'ex.bookShare' | translate }}</span>
+              <span class="bar-col">{{ 'ex.opening' | translate }}</span>
+            } @else {
+              <span class="games-col">{{ 'ex.games' | translate }}</span>
+              <span class="bar-col">{{ player() ? ('ex.resultFor' | translate: { name: player()!.username }) : ('ex.result' | translate) }}</span>
+            }
+            <span class="rep-col">{{ 'explore.repColumn' | translate }}</span>
+          </div>
+        }
+        @for (move of moves(); track move.san) {
+          <div class="row" [class.in-rep]="repertoireCount(move.san) > 0" (click)="play(move.san)">
+            <span class="san-col mono">{{ move.san }}</span>
+            @if (source() === 'book') {
+              <span class="share-col">{{ move.games ? (move.share ?? 0).toFixed(0) + '%' : '' }}</span>
+              <span class="bar-col label-text" [title]="move.label ?? ''">{{ move.label ?? (move.games ? '' : ('ex.inRepertoire' | translate)) }}</span>
+            } @else {
+              <span class="games-col">@if (move.games) {{{ move.games }} <span class="muted">({{ move.share?.toFixed(0) }}%)</span>}</span>
+              <span class="bar-col">
+                <span class="wdl">
+                  <i class="w" [style.flex-basis.%]="percent(move.white, move.games)">{{ percent(move.white, move.games) > 12 ? percent(move.white, move.games) + '%' : '' }}</i>
+                  <i class="d" [style.flex-basis.%]="percent(move.draws, move.games)">{{ percent(move.draws, move.games) > 12 ? percent(move.draws, move.games) + '%' : '' }}</i>
+                  <i class="b" [style.flex-basis.%]="percent(move.black, move.games)">{{ percent(move.black, move.games) > 12 ? percent(move.black, move.games) + '%' : '' }}</i>
+                </span>
+              </span>
+            }
+            <span class="rep-col">
+              @if (repertoireCount(move.san); as count) {
+                <span class="in-count" [title]="'explore.inReps' | translate: { n: count }"><span class="icon">check_circle</span>{{ count }}</span>
+              } @else if (isGap(move.san)) {
+                <span class="gap-badge">{{ 'explore.notCovered' | translate }}</span>
+              }
+              @if (canAdd(move.san)) {
+                <button class="add-move" [title]="'edit.add' | translate" [disabled]="busy()" (click)="addToTarget(move.san, $event)"><span class="icon">add</span></button>
+              }
+            </span>
+          </div>
+        } @empty {
+          @if (explorerLoading()) {
+            <span class="muted">{{ 'ex.loading' | translate }}</span>
+          } @else if (!explorerError()) {
+            <span class="muted">{{ 'ex.noMoves' | translate }}</span>
+          }
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="right">
+    @if (editTarget(); as target) {
+      <app-repertoire-editor [target]="target" />
+    } @else {
+      <div class="card here-card">
+        <div class="here-head">
+          <span>{{ 'explore.yourReps' | translate }}</span>
+          @if (here().length > 0) {
+            <span class="muted">{{ 'free.fitsCount' | translate: { lines: hereLines(), reps: here().length } }}</span>
+          }
+        </div>
+        @for (group of gapGroups(); track group.side) {
+          <div class="gaps">
+            <div class="gaps-line">
+              <span class="gaps-label">{{ 'explore.notCovered' | translate }} · {{ 'side.' + group.side | translate }}:</span>
+              @for (gap of group.gaps; track gap.san) {
+                <button class="move-link warn" (click)="play(gap.san)">{{ gap.san }}<span>{{ gap.share?.toFixed(0) }}%</span></button>
+              }
+            </div>
+            <div class="gaps-line">
+              @for (gap of group.gaps; track gap.san) {
+                <button class="link-btn" [disabled]="busy()" (click)="addGap(group, gap.san)">+ {{ gap.san }}</button>
+              }
+              @if (group.gaps.length > 1) {
+                <button class="link-btn" [disabled]="busy()" (click)="addAllGaps(group)">{{ 'ex.addGaps' | translate }}</button>
+              }
+              <label class="gap-target">
+                <span>{{ 'explore.addTo' | translate }}</span>
+                <select [value]="gapTargetOf(group).active.record.id" (change)="chooseGapTarget(group.side, $any($event.target).value)">
+                  @for (h of group.targets; track h.active.record.id) {
+                    <option [value]="h.active.record.id" [selected]="h === gapTargetOf(group)">{{ h.active.record.name }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+          </div>
+        }
+        @for (h of here(); track h.active.record.id) {
+          <div class="here">
+            <div class="here-title">
+              <app-side-swatch [side]="h.active.record.side" [size]="12" />
+              <strong>{{ h.active.record.name }}</strong>
+              <span class="muted">{{ 'free.linesCount' | translate: { n: h.lines, count: h.lines } }}</span>
+            </div>
+            @if (h.node.children.length > 0) {
+              <div class="here-moves">
+                <span class="muted">{{ (h.yourMove ? 'free.yourMove' : 'explore.known') | translate }}</span>
+                @for (child of h.node.children; track child.key) {
+                  <button class="move-link" (click)="play(child.san)">{{ child.san }}</button>
+                }
+              </div>
+            } @else {
+              <span class="muted small">{{ 'explore.endsHere' | translate }}</span>
+            }
+            <div class="here-actions">
+              <button class="link-btn" [disabled]="h.trainable === 0" (click)="trainHere(h)">{{ 'explore.trainHere' | translate }}</button>
+              <button class="link-btn" (click)="edit(h)">{{ 'explore.edit' | translate }}</button>
+              <button class="link-btn" (click)="openInRepertoire(h)">{{ 'explore.openRep' | translate }}</button>
+            </div>
+          </div>
+        } @empty {
+          <p class="muted none-here">{{ 'explore.noneHere' | translate }}</p>
+        }
+      </div>
+      <button class="btn new-rep" [disabled]="busy()" (click)="createRepertoire()">{{ 'explore.newFromHere' | translate }}</button>
+    }
+
+    @if (games().length > 0) {
+      <div class="card games-card">
+        <span class="label">{{ 'ex.gamesHere' | translate }}</span>
+        @for (game of games(); track game.url) {
+          <a class="game" [href]="game.url" target="_blank" rel="noopener">
+            <span class="result" [class.win]="game.result === '1-0'" [class.loss]="game.result === '0-1'">{{ game.result }}</span>
+            <span class="players-text">{{ game.white }}@if (game.whiteElo) {<span class="muted"> ({{ game.whiteElo }})</span>} - {{ game.black }}@if (game.blackElo) {<span class="muted"> ({{ game.blackElo }})</span>}</span>
+            <span class="muted date">{{ game.date }}</span>
+          </a>
+        }
+      </div>
+    }
+  </section>
+</div>
+
+@if (playerDialog()) {
+  <app-player-dialog (closed)="playerDialog.set(false)" />
+}
+
+@if (prepDialog() && player(); as p) {
+  <app-prep-dialog [player]="p" [filter]="filter()" [side]="prepSide()" (closed)="prepDialog.set(false)" />
+}

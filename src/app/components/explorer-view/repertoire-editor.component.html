@@ -1,0 +1,108 @@
+<div class="head">
+  <span class="icon">edit_note</span>
+  <div class="head-text">
+    <span>{{ 'edit.title' | translate }}</span>
+    <strong><app-side-swatch [side]="target().record.side" [size]="10" />{{ target().record.name }}</strong>
+  </div>
+  <button class="done" (click)="done()">{{ 'edit.done' | translate }}</button>
+</div>
+
+<div class="card body">
+
+  <div class="status" [class.new]="status() === 'new'">
+    @switch (status()) {
+      @case ('new') {
+        <span class="icon">fiber_new</span>{{ 'edit.newN' | translate: { n: newMoves(), count: newMoves() } }}
+      }
+      @case ('start') {
+        <span class="icon">flag</span>{{ 'edit.start' | translate }}
+      }
+      @default {
+        <span class="icon">check_circle</span>{{ 'edit.inRep' | translate }}
+      }
+    }
+  </div>
+
+  @if (path().length > 0) {
+    <div class="path">
+      @for (move of path(); track $index) {
+        <span class="mv">
+          @if (move.number) {
+            <span class="num">{{ move.number }}</span>
+          }
+          <span class="san" [class.new]="move.isNew" [class.mine]="move.mine">{{ move.san }}</span>
+        </span>
+      }
+    </div>
+  }
+
+  @if (endsOnOpponent()) {
+    <div class="warning"><span class="icon">warning_amber</span>{{ 'edit.endsOpp' | translate }}</div>
+  }
+
+  @if (newMoves() > 0) {
+    <div class="save-row">
+      <button class="btn primary" [disabled]="busy()" (click)="save()">{{ 'edit.save' | translate }}</button>
+      <button class="btn" (click)="discard()">{{ 'edit.discard' | translate }}</button>
+    </div>
+  }
+
+  @if (node()) {
+    <div class="section">
+      <span class="section-title">{{ 'edit.cont' | translate }} · {{ (yourTurn() ? 'edit.your' : 'edit.opp') | translate }}</span>
+      @for (c of continuations(); track c.node.key) {
+        <div class="cont">
+          <button class="move-chip" [class.mine]="yourTurn()" (click)="play(c.node.san)">{{ c.node.san }}</button>
+          <span class="muted">{{ 'free.linesCount' | translate: { n: c.lines, count: c.lines } }}</span>
+          @if (c.main) {
+            <span class="main-badge">{{ 'edit.main' | translate }}</span>
+          }
+          <span class="grow"></span>
+          @if (!$first) {
+            <button class="icon-btn small" [title]="'edit.makeMain' | translate" [disabled]="busy()" (click)="promote(c)"><span class="icon">vertical_align_top</span></button>
+          }
+          <button class="icon-btn small danger" [title]="'edit.deleteMove' | translate" [disabled]="busy()" (click)="remove(c)"><span class="icon">delete</span></button>
+        </div>
+      } @empty {
+        <p class="muted empty">{{ 'edit.noCont' | translate }}</p>
+      }
+    </div>
+  }
+
+  <div class="section">
+    <button class="section-toggle" (click)="toggleTree()">
+      <span class="section-title">{{ 'edit.tree' | translate }} <span class="muted">{{ 'free.linesCount' | translate: { n: target().lines.length, count: target().lines.length } }}</span></span>
+      <span class="icon">{{ treeOpen() ? 'expand_less' : 'expand_more' }}</span>
+    </button>
+    @if (treeOpen()) {
+      <div class="tree">
+        @for (row of visibleRows(); track row.end.key) {
+          <div class="tree-row" [class.current]="relation(row) === 'current'" [class.ancestor]="relation(row) === 'ancestor'" (click)="goToRow(row)">
+            <span class="tree-text" [style.padding-left.px]="row.depth * 12">
+              @if (row.leaf) {
+                <span class="icon leaf">radio_button_unchecked</span>
+              } @else {
+                <button class="fold" [title]="(isCollapsed(row) ? 'rep.expand' : 'rep.collapse') | translate" (click)="toggleRow(row, $event)"><span class="icon">{{ isCollapsed(row) ? 'chevron_right' : 'expand_more' }}</span></button>
+              }
+              <span class="mono row-moves">
+                @for (m of rowMoves(row); track m.node.key) {
+                  <span class="tm" [class.at]="m.node === node()" (click)="goToNode(m.node); $event.stopPropagation()">{{ m.number }}{{ m.san }}</span>
+                }
+              </span>
+            </span>
+            <span class="muted">{{ row.lines }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="section">
+    <span class="section-title">{{ 'edit.comment' | translate }}</span>
+    <textarea rows="3" [placeholder]="'edit.commentPlaceholder' | translate" [disabled]="!canComment()" [ngModel]="comment()" #box (blur)="saveComment(box.value)"></textarea>
+  </div>
+
+  @if (canComment()) {
+    <button class="btn danger-outline" [disabled]="busy()" (click)="removeCurrent()">{{ currentLines() > 0 ? ('edit.delete' | translate: { n: currentLines(), count: currentLines() }) : ('edit.deleteMove' | translate) }}</button>
+  }
+</div>

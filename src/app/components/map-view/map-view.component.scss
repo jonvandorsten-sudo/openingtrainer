@@ -1,0 +1,307 @@
+:host {
+  display: block;
+  height: 100%;
+  --board: min(400px, calc(100vh - 380px));
+}
+
+.map {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.heat-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 18px 14px;
+  overflow: hidden;
+}
+
+.heat-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--ink-2);
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+}
+
+.heat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.heat-row {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  border-radius: 6px;
+
+  &.active {
+    background: #f1f4f1;
+  }
+
+  &.header {
+    padding-bottom: 4px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+  }
+}
+
+.group-row {
+  position: sticky;
+  top: 24px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: var(--tile);
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+
+  strong {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .muted {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .chev {
+    font-size: 18px;
+    color: var(--ink-3);
+  }
+}
+
+.divider {
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--line);
+}
+
+.group-pct {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.name-col {
+  width: 170px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  min-width: 0;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+
+  &.due {
+    background: var(--accent);
+  }
+}
+
+.name {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pct-col {
+  width: 44px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.cell-col {
+  width: 40px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4);
+}
+
+.cell {
+  width: 40px;
+  height: 34px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  padding: 0;
+  overflow: hidden;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+
+  &.selected {
+    outline: 2px solid var(--rail-deep);
+    outline-offset: 1px;
+  }
+}
+
+.side {
+  width: calc(var(--board) + 20px);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.board-row {
+  display: flex;
+  gap: 8px;
+}
+
+.eval {
+  height: var(--board);
+}
+
+.board {
+  flex: 1;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+
+  .btn {
+    flex: 1;
+  }
+
+  .wide {
+    flex: 1.4;
+  }
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    min-width: 0;
+
+    strong {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .context {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+}
+
+.numbers {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  strong {
+    font-size: 18px;
+  }
+
+  .bad {
+    color: var(--error);
+  }
+}
+
+@media (max-width: 900px) {
+  :host {
+    --board: 100%;
+  }
+
+  .map {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .side {
+    width: 100%;
+  }
+
+  .eval {
+    display: none;
+  }
+
+  .heat-card {
+    overflow: visible;
+  }
+
+  .name-col {
+    width: 110px;
+  }
+}

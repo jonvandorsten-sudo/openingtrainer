@@ -1,0 +1,117 @@
+@if (store.ready()) {
+  <div class="shell">
+    <nav class="rail">
+      <app-logo-mark class="logo" [size]="52" [title]="appName" />
+      @for (item of items; track item.view) {
+        <button class="rail-item" [class.on]="nav.view() === item.view" (click)="nav.go(item.view)">
+          <span class="icon">{{ item.icon }}</span><span>{{ item.label | translate }}</span>
+        </button>
+      }
+      <div class="grow"></div>
+      <button class="rail-item small" [class.on]="nav.fileOpen()" (click)="nav.fileOpen.set(!nav.fileOpen())">
+        <span class="icon">save</span><span>{{ 'file.title' | translate }}</span>
+        @if (unsaved(); as n) {
+          <span class="count">{{ n }}</span>
+        }
+      </button>
+      <button class="rail-item small" (click)="nav.settingsOpen.set(true)">
+        <span class="icon">settings</span><span>{{ 'nav.settings' | translate }}</span>
+      </button>
+      <app-language-menu [up]="true" />
+    </nav>
+
+    <header class="mobile-header">
+      <app-logo-mark [size]="30" />
+      <div class="mobile-title">
+        <span class="brand">{{ appName }}</span>
+        <app-repertoire-picker [dark]="true" />
+      </div>
+      <span class="streak"><span class="icon">local_fire_department</span>{{ store.streak() }}</span>
+      <button class="icon-btn light file-btn" (click)="nav.fileOpen.set(true)">
+        <span class="icon">save</span>
+        @if (unsaved(); as n) {
+          <span class="count">{{ n }}</span>
+        }
+      </button>
+      <app-language-menu />
+      <button class="icon-btn light" (click)="nav.settingsOpen.set(true)"><span class="icon">settings</span></button>
+    </header>
+
+    <div class="surface">
+      <div class="topbar">
+        <app-repertoire-picker />
+        @if (nav.view() === 'train') {
+          @if (store.active()) {
+            <app-mode-tabs />
+          }
+        } @else {
+          <span class="view-title">{{ viewTitle() | translate }}</span>
+        }
+        <div class="grow"></div>
+        @if (nav.view() === 'rep') {
+          <button class="btn primary compact" (click)="nav.importOpen.set(true)">{{ 'top.importPgn' | translate }}</button>
+          <button class="btn compact" (click)="exportPgn()" [disabled]="!store.active()">{{ 'top.exportPgn' | translate }}</button>
+        }
+        <app-file-chip />
+        <div class="streak" [title]="store.streak() + ' ' + ('top.streak' | translate: { count: store.streak() })"><span class="icon">local_fire_department</span><strong>{{ store.streak() }}</strong></div>
+        <div class="goal" [title]="'top.goal' | translate">
+          <strong>{{ store.todayCount() }}/{{ goal() }}</strong>
+          <div class="goal-track"><div [style.width.%]="goalPercent()"></div></div>
+        </div>
+      </div>
+
+      <main class="content">
+        @if (nav.view() === 'explore') {
+          <app-explorer-view />
+        } @else if (!store.active()) {
+          <app-welcome />
+        } @else {
+          @switch (nav.view()) {
+            @case ('train') {
+              <app-train-view />
+            }
+            @case ('map') {
+              <app-map-view />
+            }
+            @case ('rep') {
+              <app-repertoire-view />
+            }
+            @case ('stats') {
+              <app-stats-view />
+            }
+          }
+        }
+      </main>
+    </div>
+
+    <nav class="tabbar">
+      @for (item of items; track item.view) {
+        <button [class.on]="nav.view() === item.view" (click)="nav.go(item.view)">
+          <span class="icon">{{ item.icon }}</span>{{ item.label | translate }}
+        </button>
+      }
+    </nav>
+  </div>
+
+  @if (nav.toast(); as toast) {
+    <div class="toast">
+      <span>{{ toast.key | translate: { n: toast.n ?? 0, count: toast.n ?? 0 } }}</span>
+      @if (toast.undo && store.lastChange()) {
+        <button (click)="undo()">{{ 'edit.undo' | translate }}</button>
+      }
+      @if (toast.action === 'save') {
+        <button (click)="saveFile()">{{ 'file.save' | translate }}</button>
+      }
+    </div>
+  }
+
+  @if (nav.importOpen()) {
+    <app-import-dialog />
+  }
+  @if (nav.settingsOpen()) {
+    <app-settings-dialog />
+  }
+  @if (nav.fileOpen()) {
+    <app-file-panel />
+  }
+}

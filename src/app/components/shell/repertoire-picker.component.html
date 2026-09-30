@@ -1,0 +1,70 @@
+<button class="trigger" [class.dark]="dark()" [class.open]="open()" (click)="toggle()">
+  <app-side-swatch [side]="trigger().side" [size]="14" />
+  <span class="name">{{ trigger().name }}</span>
+</button>
+
+@if (open()) {
+  <div class="backdrop" (click)="close()"></div>
+  <div class="panel">
+    <div class="grab"></div>
+    <label class="search">
+      <span class="icon">search</span>
+      <input [placeholder]="'picker.search' | translate" [ngModel]="query()" (ngModelChange)="query.set($event)" />
+    </label>
+
+    <button class="all" [class.on]="isScope({ kind: 'all' })" (click)="select({ kind: 'all' })">
+      <app-side-swatch [size]="30" />
+      <span class="text">
+        <strong>{{ 'picker.all' | translate }}</strong>
+        <span>{{ 'picker.allSub' | translate: { reps: store.repertoires().length, lines: totalLines() } }}</span>
+      </span>
+      @if (isScope({ kind: 'all' })) {
+        <span class="icon check">check</span>
+      }
+    </button>
+
+    <div class="scroll">
+      @for (group of groups(); track group.side) {
+        <div class="group-head" (click)="toggleGroup(group.side)">
+          <app-side-swatch [side]="group.side" [size]="12" />
+          <span class="group-label">{{ 'side.' + group.side | translate }}</span>
+          <span class="group-count">{{ group.total }}</span>
+          <span class="grow"></span>
+          <button class="side-all" [class.on]="isScope({ kind: 'side', side: group.side })" (click)="selectSide(group.side, $event)">{{ 'picker.allSide' | translate }}</button>
+          <span class="icon chev">{{ group.open ? 'expand_less' : 'expand_more' }}</span>
+        </div>
+        @if (group.open) {
+          @for (item of group.items; track item.record.id) {
+            <button class="item" [class.on]="isScope({ kind: 'one', id: item.record.id })" (click)="select({ kind: 'one', id: item.record.id })">
+              <app-side-swatch [side]="group.side" [size]="30" icon="folder" />
+              <span class="text">
+                <strong>{{ item.record.name }}</strong>
+                <span>{{ subtitle(item) }}</span>
+              </span>
+              <span class="mastery">
+                <span class="pct" [style.color]="masteryColor(item.mastery)">{{ item.mastery === null ? ('picker.new' | translate) : item.mastery + '%' }}</span>
+                <span class="bar"><i [style.width.%]="item.mastery ?? 0" [style.background]="masteryColor(item.mastery)"></i></span>
+              </span>
+            </button>
+          }
+        }
+      }
+      @if (nothingFound()) {
+        <p class="none">{{ 'picker.noMatch' | translate }}</p>
+      }
+    </div>
+
+    @if (creating()) {
+      <div class="create">
+        <input [placeholder]="'picker.newName' | translate" [ngModel]="newName()" (ngModelChange)="newName.set($event)" (keydown.enter)="create('white')" />
+        <button class="btn" (click)="create('white')"><app-side-swatch side="white" [size]="12" />{{ 'side.white' | translate }}</button>
+        <button class="btn" (click)="create('black')"><app-side-swatch side="black" [size]="12" />{{ 'side.black' | translate }}</button>
+      </div>
+    } @else {
+      <div class="footer">
+        <button (click)="importPgn()">{{ 'top.importPgn' | translate }}</button>
+        <button (click)="creating.set(true)">{{ 'picker.newRepertoire' | translate }}</button>
+      </div>
+    }
+  </div>
+}

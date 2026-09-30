@@ -1,0 +1,74 @@
+<div class="backdrop" (click)="close()"></div>
+<div class="panel">
+  <div class="grab"></div>
+  <div class="head">
+    <span class="icon">devices</span>
+    <div class="head-text">
+      <strong>{{ 'file.dataTitle' | translate }}</strong>
+      <p>{{ 'file.dataText' | translate }}</p>
+    </div>
+    <button class="close" (click)="close()"><span class="icon">close</span></button>
+  </div>
+
+  <div class="body">
+    <div class="status" [class.dirty]="dirty()">
+      <span class="icon">description</span>
+      <div class="status-text">
+        <strong>{{ file.linkedName() ?? file.state().savedName ?? ('file.noFile' | translate) }}</strong>
+        <span>{{ lastSaved() }}</span>
+      </div>
+      @if (dirty()) {
+        <span class="badge warn">{{ 'file.changes' | translate: { n: file.state().unsaved, count: file.state().unsaved } }}</span>
+      } @else if (file.state().lastSavedAt) {
+        <span class="badge ok">{{ 'file.upToDate' | translate }}</span>
+      }
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" (click)="file.save()">{{ 'file.saveFile' | translate }}</button>
+      <button class="btn" (click)="file.pick()">{{ 'file.open' | translate }}</button>
+    </div>
+
+    @if (file.pending(); as pending) {
+      <div class="confirm">
+        <p><strong>{{ pending.name }}</strong> · {{ 'file.pendingContents' | translate: { reps: pending.repertoires, lines: pending.lines ?? '…' } }}</p>
+        <p>{{ 'file.replaceWarn' | translate }}</p>
+        <div class="confirm-actions">
+          <button class="btn primary compact" (click)="confirmLoad()">{{ 'file.load' | translate }}</button>
+          <button class="btn compact" (click)="file.cancelLoad()">{{ 'import.cancel' | translate }}</button>
+        </div>
+      </div>
+    }
+    @if (file.loadError()) {
+      <p class="error">{{ 'settings.badBackup' | translate }}</p>
+    }
+
+    @if (file.canLink) {
+      <div class="row">
+        <span class="icon">sync</span>
+        <div class="row-text">
+          <strong>{{ 'file.autoTitle' | translate }}</strong>
+          @if (linked()) {
+            <span>{{ 'file.autoOn' | translate: { name: file.linkedName()! } }}</span>
+          } @else {
+            <span>{{ 'file.autoOff' | translate }}</span>
+          }
+        </div>
+        @if (linked()) {
+          <button class="btn compact" (click)="file.unlink()">{{ 'file.unlink' | translate }}</button>
+        } @else {
+          <button class="btn compact" (click)="file.link()">{{ 'file.link' | translate }}</button>
+        }
+      </div>
+      @if (linked() && file.needsPermission()) {
+        <button class="permission" (click)="file.grantPermission()">{{ 'file.permission' | translate: { name: file.linkedName()! } }}</button>
+      }
+    }
+
+    <label class="row toggle">
+      <span class="icon">notifications</span>
+      <span class="row-text"><strong>{{ 'file.remind' | translate }}</strong></span>
+      <input type="checkbox" [checked]="file.state().remind" (change)="file.setRemind($any($event.target).checked)" />
+    </label>
+  </div>
+</div>

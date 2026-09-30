@@ -1,0 +1,111 @@
+<div class="backdrop" (click)="close()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-head">
+      <span>{{ 'import.title' | translate }}</span>
+      <button class="icon-btn" (click)="close()"><span class="icon">close</span></button>
+    </div>
+
+    <label class="drop" [class.dragging]="dragging()" (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+      <span class="icon">upload_file</span>
+      <span>
+        @if (files().length > 1) {
+          {{ 'import.filesChosen' | translate: { n: files().length } }}
+        } @else {
+          {{ fileLabel() ?? ('import.drop' | translate) }}
+        }
+      </span>
+      <input type="file" accept=".pgn,.zip,text/plain,application/zip" multiple (change)="onFile($event)" hidden />
+    </label>
+    <p class="hint muted">{{ 'import.bulkHint' | translate }}</p>
+
+    @if (!bulk()) {
+      <div class="field">
+        <textarea rows="4" [placeholder]="'import.paste' | translate" [ngModel]="pasted()" (ngModelChange)="setText($event)"></textarea>
+      </div>
+    }
+
+    @if (sourceCount() > 1 || grouping() !== 'source') {
+      <div class="field">
+        <span>{{ 'import.grouping' | translate }}</span>
+        <div class="segmented tall">
+          <button [class.on]="grouping() === 'source'" (click)="grouping.set('source')">{{ 'import.groupSource' | translate }}</button>
+          <button [class.on]="grouping() === 'opening'" (click)="grouping.set('opening')">{{ 'import.groupOpening' | translate }}</button>
+          <button [class.on]="grouping() === 'side'" (click)="grouping.set('side')">{{ 'import.groupSide' | translate }}</button>
+        </div>
+      </div>
+    }
+
+    @if (processing()) {
+      <div class="notice"><span class="icon spin">sync</span> {{ 'import.processing' | translate }}</div>
+    }
+
+    @if (readError()) {
+      <div class="notice error">{{ 'import.readError' | translate }}</div>
+    }
+
+    @if (bulk()) {
+      <div class="bulk">
+        @for (item of items(); track $index; let i = $index) {
+          <label class="bulk-row" [class.off]="item.lines === 0">
+            <input type="checkbox" [checked]="item.lines > 0 && !skipped().has(i)" [disabled]="item.lines === 0" (change)="toggle(i)" />
+            <span class="bulk-name">
+              <strong>{{ item.name }}</strong>
+              <span class="muted">{{ 'side.' + item.side | translate }} · {{ 'import.linesShort' | translate: { n: item.lines } }}@if (item.errors) { · {{ 'import.illegal' | translate: { n: item.errors } }}}</span>
+            </span>
+            @if (existingFor(item); as existing) {
+              <span class="tag update">{{ 'import.updates' | translate }}</span>
+            } @else {
+              <span class="tag">{{ 'import.new' | translate }}</span>
+            }
+          </label>
+        }
+      </div>
+      <p class="muted hint">{{ 'import.updateHint' | translate }}</p>
+    } @else if (single(); as item) {
+      <div class="grid">
+        <label class="field">
+          <span>{{ 'import.folder' | translate }}</span>
+          <select [ngModel]="target()" (ngModelChange)="target.set($event)">
+            <option [value]="NEW">{{ 'import.newFolder' | translate }}</option>
+            @for (record of store.repertoires(); track record.id) {
+              <option [value]="record.id">{{ record.name }}</option>
+            }
+          </select>
+        </label>
+        @if (target() === NEW) {
+          <div class="field">
+            <span>{{ 'import.iPlay' | translate }}</span>
+            <div class="segmented tall">
+              <button [class.on]="side() === 'white'" (click)="side.set('white')">{{ 'side.white' | translate }}</button>
+              <button [class.on]="side() === 'black'" (click)="side.set('black')">{{ 'side.black' | translate }}</button>
+            </div>
+          </div>
+          <label class="field wide">
+            <span>{{ 'import.name' | translate }}</span>
+            <input [ngModel]="name()" (ngModelChange)="name.set($event)" />
+          </label>
+        }
+      </div>
+      <div class="notice" [class.error]="item.lines === 0">
+        @if (item.lines === 0) {
+          {{ 'import.error' | translate }}
+        } @else {
+          {{ 'import.preview' | translate: { games: item.games, lines: item.lines } }}
+          @if (item.errors > 0) {
+            · {{ 'import.illegal' | translate: { n: item.errors } }}
+          }
+          @if (target() !== NEW && target() === updates()?.id) {
+            · {{ 'import.willUpdate' | translate }}
+          }
+        }
+      </div>
+    }
+
+    <div class="dialog-actions">
+      <button class="btn" (click)="close()">{{ 'import.cancel' | translate }}</button>
+      <button class="btn primary" [disabled]="!canImport()" (click)="confirm()">
+        {{ bulk() ? ('import.readMany' | translate: { n: selected().length }) : ('import.read' | translate) }}
+      </button>
+    </div>
+  </div>
+</div>

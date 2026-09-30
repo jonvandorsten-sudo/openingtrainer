@@ -1,0 +1,304 @@
+:host {
+  display: block;
+  height: 100%;
+  --board: min(560px, calc(100vh - 250px));
+}
+
+.train {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+.play {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  width: calc(var(--board) + 26px);
+}
+
+.board-row {
+  display: flex;
+  gap: 10px;
+}
+
+.eval-vertical {
+  height: var(--board);
+}
+
+.eval-horizontal,
+.mobile-modes {
+  display: none;
+}
+
+.board {
+  width: var(--board);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.icon-only {
+  padding: 0 10px;
+}
+
+.free-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 13px;
+
+  .icon {
+    font-size: 18px;
+  }
+
+  .mono {
+    font-size: 12px;
+  }
+
+  .btn {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
+.free-text {
+  min-width: 0;
+}
+
+.keys {
+  margin-left: auto;
+  align-self: center;
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line-card {
+  gap: 4px;
+  padding: 18px 20px;
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .name {
+    font-size: 20px;
+  }
+}
+
+.chance {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tile {
+  background: var(--tile);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 20px;
+  }
+
+  .good {
+    color: var(--accent);
+  }
+
+  .bad {
+    color: var(--error);
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+}
+
+.comment {
+  gap: 8px;
+  min-height: 0;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow: auto;
+    max-height: 240px;
+  }
+}
+
+.spacer {
+  flex: 1;
+}
+
+.peek {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px dashed #b3bbb4;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: var(--surface-bar);
+  }
+
+  .icon {
+    font-size: 22px;
+    color: var(--ink-3);
+  }
+}
+
+.peek-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+
+  .muted {
+    font-size: 12px;
+  }
+}
+
+.peek-open {
+  background: var(--warn-soft);
+  color: var(--warn-ink);
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .mono {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.peek-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+
+  button {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--warn-ink);
+  }
+}
+
+.empty {
+  max-width: 520px;
+  margin: 48px auto;
+  align-items: center;
+  text-align: center;
+  padding: 32px;
+
+  .big {
+    font-size: 48px;
+    color: var(--accent);
+  }
+
+  h2 {
+    margin: 8px 0 0;
+    font-weight: 500;
+  }
+
+  .row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 900px) {
+  :host {
+    --board: 100%;
+  }
+
+  .mobile-modes {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .train {
+    flex-direction: column;
+    gap: 12px;
+    height: auto;
+  }
+
+  .play {
+    width: 100%;
+  }
+
+  .eval-vertical,
+  .keys,
+  .spacer {
+    display: none;
+  }
+
+  .eval-horizontal {
+    display: flex;
+  }
+
+  .actions .btn {
+    flex: 1;
+    height: 44px;
+  }
+
+  .info {
+    overflow: visible;
+  }
+
+  .line-card .name {
+    font-size: 17px;
+  }
+}

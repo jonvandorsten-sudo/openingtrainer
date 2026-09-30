@@ -1,0 +1,75 @@
+<div class="map">
+  <section class="card heat-card">
+    <div class="heat-head">
+      <div class="legend">
+        @for (item of legend; track item.label) {
+          <span><i [style.background]="item.color"></i>{{ item.label | translate }}</span>
+        }
+      </div>
+    </div>
+    <div class="heat">
+      <div class="heat-row header">
+        <span class="name-col"></span><span class="pct-col"></span>
+        @for (n of columns(); track n) {
+          <span class="cell-col">{{ n }}</span>
+        }
+      </div>
+      @for (group of groups(); track group.active.record.id) {
+        <button class="group-row" (click)="toggle(group)">
+          <span class="icon chev">{{ group.open ? 'expand_more' : 'chevron_right' }}</span>
+          <app-side-swatch [side]="group.active.record.side" [size]="12" />
+          <strong>{{ group.active.record.name }}</strong>
+          <span class="muted">{{ groupLabel(group) }}</span>
+          <span class="divider"></span>
+          <span class="group-pct" [style.color]="masteryColor(group.mastery)">{{ group.mastery === null ? ('map.new' | translate) : group.mastery + '%' }}</span>
+        </button>
+        @if (group.open) {
+          @for (row of group.rows; track row.line.key) {
+            <div class="heat-row" [class.active]="selected()?.line === row.line">
+              <div class="name-col">
+                <span class="dot" [class.due]="row.due"></span>
+                <span class="name" [title]="row.line.name">{{ row.line.name }}</span>
+              </div>
+              <span class="pct-col" [style.color]="masteryInk(row.mastery)">{{ row.mastery === null ? ('map.new' | translate) : row.mastery + '%' }}</span>
+              @for (cell of row.cells; track cell.node.key) {
+                <button class="cell" [style.background]="cell.bg" [style.color]="cell.ink" [class.selected]="isSelected(cell)" [title]="title(cell)" (click)="pick(cell)">
+                  {{ cell.node.san }}
+                </button>
+              }
+            </div>
+          }
+        }
+      }
+    </div>
+  </section>
+
+  <section class="side">
+    <div class="board-row">
+      @if (showEval()) {
+        <app-eval-bar class="eval" [evaluation]="evaluation()" [orientation]="orientation()" />
+      }
+      <div class="board">
+        <app-chess-board [position]="trainer.board()" [orientation]="orientation()" (moved)="trainer.move($event)" />
+      </div>
+    </div>
+    <app-feedback-bar [feedback]="trainer.feedback()" />
+    <div class="actions">
+      @if (trainer.playing()) {
+        <button class="btn" (click)="trainer.hint()">{{ 'train.hint' | translate }}</button>
+      }
+      <button class="btn" (click)="restart()">{{ 'train.restart' | translate }}</button>
+      <button class="btn primary wide" (click)="nextWeak()">{{ 'map.nextWeak' | translate }}</button>
+    </div>
+    @if (selected(); as cell) {
+      <div class="card info">
+        <div class="meta"><span class="chip">{{ cell.line.eco || cell.line.group }}</span><strong>{{ cell.line.name }}</strong></div>
+        <span class="mono context">{{ info()?.context || ('map.startPos' | translate) }}</span>
+        <div class="numbers">
+          <div><span>{{ 'map.yourMove' | translate }}</span><strong class="mono">{{ trainer.playing() ? '?' : cell.node.san }}</strong></div>
+          <div><span>{{ 'map.played' | translate }}</span><strong>{{ info()?.attempts }}</strong></div>
+          <div><span>{{ 'map.missed' | translate }}</span><strong [class.bad]="(info()?.rate ?? 0) > 0.3">{{ info()?.attempts ? info()?.misses + '×' : 0 }}</strong></div>
+        </div>
+      </div>
+    }
+  </section>
+</div>
